@@ -42,11 +42,15 @@ app.get("/file/:id", async function (req, res) {
     const fileData = await fileModel.findOne({
         _id: id
     });
+    
+    if (!fileData)
+    {
+        res.status(400).json(`File missing`);
+        return;
+    }
 
-    // res.status(200).json(fileData);
-    const _path = path.join(__dirname, fileData.destination + fileData.filename);
-    // console.log(_path);
-    res.status(200).sendFile(_path);
+    const filePath = path.join(__dirname, fileData.destination + fileData.filename);
+    res.status(200).sendFile(filePath);
 });
 app.post("/file", uploader.single("file"), async function (req, res) {
     const file = req.file;
