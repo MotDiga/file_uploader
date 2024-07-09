@@ -2,6 +2,7 @@ const express = require("express");
 const app     = express();
 const cors    = require("cors");
 const fs      = require('fs');
+const path    = require('path');
 const dotenv  = require("dotenv");
 dotenv.config();
 const multer          = require("multer");
@@ -28,13 +29,24 @@ app.use(requestLogger);
 
 //     res.status(200).json(filesData);
 // });
-app.get("/file/:id", async function (req, res) {
+app.get("/file/info/:id", async function (req, res) {
     const id = req.params.id;
     const fileData = await fileModel.findOne({
         _id: id
     });
 
     res.status(200).json(fileData);
+});
+app.get("/file/:id", async function (req, res) {
+    const id = req.params.id;
+    const fileData = await fileModel.findOne({
+        _id: id
+    });
+
+    // res.status(200).json(fileData);
+    const _path = path.join(__dirname, fileData.destination + fileData.filename);
+    // console.log(_path);
+    res.status(200).sendFile(_path);
 });
 app.post("/file", uploader.single("file"), async function (req, res) {
     const file = req.file;
@@ -47,7 +59,7 @@ app.post("/file", uploader.single("file"), async function (req, res) {
     // console.log(file);
 
     try {
-        await fileModel.create({
+        const fileData = await fileModel.create({
             fieldname: file.fieldname,
             originalname: file.originalname,
             encoding: file.encoding,
@@ -58,7 +70,7 @@ app.post("/file", uploader.single("file"), async function (req, res) {
             size: file.size
         });
     
-        res.status(200).json(`File Uploaded Successfully`);
+        res.status(200).json(`File Uploaded Successfully, id:${fileData._id}`);
     } catch (error) {
         res.status(500).json(`File Uploaded UnSuccessfully`);
         console.error(`Error, file can't be saved to DB:${error}`);
